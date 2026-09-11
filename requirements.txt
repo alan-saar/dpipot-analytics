@@ -1,0 +1,18 @@
+# Dependências para Análise de Logs do DPIpot-NG
+# Motor de Análise SQL e Colunar
+duckdb>=1.1.0
+polars>=1.0.0
+pyarrow>=17.0.0
+
+# Visualização de Dados e Gráficos Acadêmicos
+matplotlib>=3.9.0
+seaborn>=0.13.0
+
+# Ambiente Interativo
+jupyterlab>=4.2.0
+ipykernel>=6.29.0
+
+# Utilitários de Terminal e Formatação
+rich>=13.7.0
+textual>=0.70.0
+tqdm>=4.66.0
