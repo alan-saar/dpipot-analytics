@@ -16,3 +16,5 @@ ipykernel>=6.29.0
 rich>=13.7.0
 textual>=0.70.0
 tqdm>=4.66.0
+pytz>=2024.1
+

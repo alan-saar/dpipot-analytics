@@ -1,0 +1,2075 @@
+# =====================================================================
+# DPIpot-Analytics - Dicionário de Dados e Esquema dos Tipos de Logs
+# Configuração oficial dos 4 tipos de logs do DPIpot:
+#   • classifier - Classificador nDPI de pacotes e fluxos
+#   • infra      - Infraestrutura Kubernetes e métricas de nós/pods
+#   • pods       - Sessões e credenciais nos honeypots (Cowrie, etc.)
+#   • proxy      - Proxy MITM TPROXY com telemetria e enriquecimento GeoIP
+#
+# Este arquivo pode ser editado livremente para personalizar tipos,
+# exemplos e descrições. A TUI exibe e recarrega estas definições.
+# =====================================================================
+
+[classifier]
+name = "classifier"
+label = "Classificador nDPI"
+description = "Logs de classificação profunda de tráfego de rede (nDPI / DPIpot Classifier) capturados na borda."
+total_columns = 26
+
+[[classifier.columns]]
+name = "@timestamp"
+type = "TIMESTAMP"
+example = "2026-07-26 21:47:09.778000-03:00"
+description = "Data e hora do evento no padrão ISO-8601 (UTC)"
+
+[[classifier.columns]]
+name = "@version"
+type = "INTEGER"
+example = "1"
+description = "Versão do esquema de eventos (Logstash/Filebeat/ECS)"
+
+[[classifier.columns]]
+name = "_id"
+type = "VARCHAR"
+example = "0H8KoZ8B2VwnjNfaOgFH"
+description = "Identificador único do documento indexado"
+
+[[classifier.columns]]
+name = "category"
+type = "INTEGER"
+example = "5"
+description = "ID numérico da categoria de tráfego classificada pelo nDPI"
+
+[[classifier.columns]]
+name = "dst_ip"
+type = "VARCHAR"
+example = "200.137.89.214"
+description = "Endereço IP de destino do pacote ou fluxo"
+
+[[classifier.columns]]
+name = "dst_port"
+type = "INTEGER"
+example = "30000"
+description = "Porta de rede de destino (ex: 22, 80, 443, 30000)"
+
+[[classifier.columns]]
+name = "ethertype"
+type = "INTEGER"
+example = "2048"
+description = "Código Ethernet do protocolo de rede (ex: 0x0800 para IPv4)"
+
+[[classifier.columns]]
+name = "event.original"
+type = "VARCHAR"
+example = "{\"flow_id\":\"75e8f929-740b-4620-8f80-6f1779450f27\",\"tuple_id\":\"200.137."
+description = "Conteúdo bruto original da mensagem de log antes da formatação"
+
+[[classifier.columns]]
+name = "flow_id"
+type = "VARCHAR"
+example = "75e8f929-740b-4620-8f80-6f1779450f27"
+description = "Identificador único universal (UUID) do fluxo de rede"
+
+[[classifier.columns]]
+name = "instance"
+type = "VARCHAR"
+example = "classifier"
+description = "Instância do componente DPIpot emissor (ex: classifier, proxy)"
+
+[[classifier.columns]]
+name = "ip_proto"
+type = "INTEGER"
+example = "6"
+description = "Protocolo de camada IP (ex: 6 para TCP, 17 para UDP, 1 para ICMP)"
+
+[[classifier.columns]]
+name = "ndpi_app"
+type = "VARCHAR"
+example = "WIREGUARD"
+description = "Aplicação ou serviço detectado pelo motor de inspeção nDPI"
+
+[[classifier.columns]]
+name = "ndpi_proto"
+type = "VARCHAR"
+example = "TLS"
+description = "Protocolo da camada de aplicação identificado pelo nDPI (ex: SSH, TLS, HTTP, DNS)"
+
+[[classifier.columns]]
+name = "payload_len"
+type = "INTEGER"
+example = "46"
+description = "Tamanho da carga útil (payload) em bytes"
+
+[[classifier.columns]]
+name = "src_ip"
+type = "VARCHAR"
+example = "212.102.40.218"
+description = "Endereço IP de origem do tráfego ou atacante"
+
+[[classifier.columns]]
+name = "src_port"
+type = "INTEGER"
+example = "5648"
+description = "Porta efêmera ou de origem do tráfego"
+
+[[classifier.columns]]
+name = "tcp_flags"
+type = "VARCHAR"
+example = "RST"
+description = "Flags do cabeçalho TCP observadas (SYN, ACK, RST, FIN, PSH)"
+
+[[classifier.columns]]
+name = "transport"
+type = "VARCHAR"
+example = "tcp"
+description = "Protocolo de transporte utilizado (tcp, udp, icmp)"
+
+[[classifier.columns]]
+name = "tuple_id"
+type = "VARCHAR"
+example = "200.137.89.214:30000-212.102.40.218:5648-6"
+description = "5-tupla do fluxo de rede (IP_origem:porta-IP_destino:porta-proto)"
+
+[[classifier.columns]]
+name = "event_type"
+type = "VARCHAR"
+example = "ndpi"
+description = "Tipo semântico do evento (ex: flow, session, auth, command)"
+
+[[classifier.columns]]
+name = "ip_version"
+type = "INTEGER"
+example = "4"
+description = "Versão do protocolo de internet (4 para IPv4, 6 para IPv6)"
+
+[[classifier.columns]]
+name = "node_name"
+type = "VARCHAR"
+example = "dpipot-ubuntu-k3s"
+description = "Nome do nó físico ou VM do cluster Kubernetes (ex: dpipot)"
+
+[[classifier.columns]]
+name = "pod_name"
+type = "VARCHAR"
+example = "dpipot-proxy-kgqps"
+description = "Nome do pod Kubernetes que processou a conexão"
+
+[[classifier.columns]]
+name = "tcp_window"
+type = "INTEGER"
+example = "502"
+description = "Tamanho da janela de recepção TCP anunciada (TCP Window Size)"
+
+[[classifier.columns]]
+name = "tos"
+type = "INTEGER"
+example = "0"
+description = "Campo Type of Service (ToS) / DSCP do cabeçalho IP"
+
+[[classifier.columns]]
+name = "ttl"
+type = "INTEGER"
+example = "64"
+description = "Time to Live (TTL) do pacote IP recebido"
+
+[infra]
+name = "infra"
+label = "Infraestrutura & Orquestração"
+description = "Logs operacionais de infraestrutura Kubernetes, agentes Filebeat e telemetria dos nós."
+total_columns = 108
+
+[[infra.columns]]
+name = "@timestamp"
+type = "TIMESTAMP"
+example = "2026-07-26 21:10:30.795000-03:00"
+description = "Data e hora do evento no padrão ISO-8601 (UTC)"
+
+[[infra.columns]]
+name = "_id"
+type = "VARCHAR"
+example = "7mrooJ8B2VwnjNfa0Dsk"
+description = "Identificador único do documento indexado"
+
+[[infra.columns]]
+name = "container.id"
+type = "VARCHAR"
+example = "191d188d40c7d9a5f06e8a9068ee76c2c048b8b1b7cacaa117c081f48834f7b2"
+description = "ID hexadecimal do container Docker/containerd no Kubernetes"
+
+[[infra.columns]]
+name = "container.image.name"
+type = "VARCHAR"
+example = "docker.elastic.co/beats/filebeat:8.12.0"
+description = "Nome da imagem de container utilizada (ex: filebeat, cowrie, proxy)"
+
+[[infra.columns]]
+name = "container.runtime"
+type = "VARCHAR"
+example = "containerd"
+description = "Runtime de containers em execução (ex: containerd)"
+
+[[infra.columns]]
+name = "ecs.version"
+type = "VARCHAR"
+example = "1.6.0"
+description = "Versão da especificação Elastic Common Schema (ECS)"
+
+[[infra.columns]]
+name = "event.original"
+type = "VARCHAR"
+example = "File was removed. Closing because close_removed is enabled."
+description = "Conteúdo bruto original da mensagem de log antes da formatação"
+
+[[infra.columns]]
+name = "finished"
+type = "BOOLEAN"
+example = "False"
+description = "Sinaliza se a coleta do arquivo pelo harvester foi finalizada"
+
+[[infra.columns]]
+name = "harvester_id"
+type = "VARCHAR"
+example = "aaa726f3-3cf4-49be-b06f-9834848eeb3b"
+description = "UUID do leitor de arquivos do Filebeat (harvester)"
+
+[[infra.columns]]
+name = "host.name"
+type = "VARCHAR"
+example = "filebeat-8bk29"
+description = "Nome do host onde o agente de coleta está rodando"
+
+[[infra.columns]]
+name = "input_id"
+type = "VARCHAR"
+example = "012c2741-2661-4674-9c4e-46fda0e17881"
+description = "ID do input de coleta de logs configurado no Filebeat"
+
+[[infra.columns]]
+name = "kubernetes.container.name"
+type = "VARCHAR"
+example = "filebeat"
+description = "Nome do container definido no manifesto Kubernetes"
+
+[[infra.columns]]
+name = "kubernetes.daemonset.name"
+type = "VARCHAR"
+example = "filebeat"
+description = "Nome do DaemonSet Kubernetes correspondente"
+
+[[infra.columns]]
+name = "kubernetes.labels.app"
+type = "VARCHAR"
+example = "filebeat"
+description = "Label app do Kubernetes associada à carga de trabalho"
+
+[[infra.columns]]
+name = "kubernetes.labels.controller-revision-hash"
+type = "VARCHAR"
+example = "54fb7db7cf"
+description = "Metadado do Kubernetes para labels.controller-revision-hash"
+
+[[infra.columns]]
+name = "kubernetes.labels.pod-template-generation"
+type = "INTEGER"
+example = "5"
+description = "Metadado do Kubernetes para labels.pod-template-generation"
+
+[[infra.columns]]
+name = "kubernetes.namespace"
+type = "VARCHAR"
+example = "dpipot"
+description = "Namespace do Kubernetes onde o pod está alocado (ex: dpipot)"
+
+[[infra.columns]]
+name = "kubernetes.namespace_labels.app_kubernetes_io/name"
+type = "VARCHAR"
+example = "dpipot"
+description = "Metadado do Kubernetes para namespace_labels.app_kubernetes_io/name"
+
+[[infra.columns]]
+name = "kubernetes.namespace_labels.kubernetes_io/metadata_name"
+type = "VARCHAR"
+example = "dpipot"
+description = "Metadado do Kubernetes para namespace_labels.kubernetes_io/metadata_name"
+
+[[infra.columns]]
+name = "kubernetes.namespace_uid"
+type = "VARCHAR"
+example = "98492dbe-0a56-4852-8872-a2e424389eb4"
+description = "Metadado do Kubernetes para namespace_uid"
+
+[[infra.columns]]
+name = "kubernetes.node.hostname"
+type = "VARCHAR"
+example = "dpipot"
+description = "Hostname do nó do cluster Kubernetes"
+
+[[infra.columns]]
+name = "kubernetes.node.labels.beta_kubernetes_io/arch"
+type = "VARCHAR"
+example = "amd64"
+description = "Metadado do Kubernetes para node.labels.beta_kubernetes_io/arch"
+
+[[infra.columns]]
+name = "kubernetes.node.labels.beta_kubernetes_io/os"
+type = "VARCHAR"
+example = "linux"
+description = "Metadado do Kubernetes para node.labels.beta_kubernetes_io/os"
+
+[[infra.columns]]
+name = "kubernetes.node.labels.kubernetes_io/arch"
+type = "VARCHAR"
+example = "amd64"
+description = "Metadado do Kubernetes para node.labels.kubernetes_io/arch"
+
+[[infra.columns]]
+name = "kubernetes.node.labels.kubernetes_io/hostname"
+type = "VARCHAR"
+example = "dpipot"
+description = "Metadado do Kubernetes para node.labels.kubernetes_io/hostname"
+
+[[infra.columns]]
+name = "kubernetes.node.labels.kubernetes_io/os"
+type = "VARCHAR"
+example = "linux"
+description = "Metadado do Kubernetes para node.labels.kubernetes_io/os"
+
+[[infra.columns]]
+name = "kubernetes.node.labels.microk8s_io/cluster"
+type = "BOOLEAN"
+example = "True"
+description = "Metadado do Kubernetes para node.labels.microk8s_io/cluster"
+
+[[infra.columns]]
+name = "kubernetes.node.labels.node_kubernetes_io/microk8s-controlplane"
+type = "VARCHAR"
+example = "microk8s-controlplane"
+description = "Metadado do Kubernetes para node.labels.node_kubernetes_io/microk8s-controlplane"
+
+[[infra.columns]]
+name = "kubernetes.node.name"
+type = "VARCHAR"
+example = "dpipot"
+description = "Metadado do Kubernetes para node.name"
+
+[[infra.columns]]
+name = "kubernetes.node.uid"
+type = "VARCHAR"
+example = "368868ad-8420-4bda-a757-ef07cc1062e8"
+description = "Metadado do Kubernetes para node.uid"
+
+[[infra.columns]]
+name = "kubernetes.pod.ip"
+type = "VARCHAR"
+example = "10.1.99.45"
+description = "Endereço IP interno atribuído ao pod pelo CNI do Kubernetes"
+
+[[infra.columns]]
+name = "kubernetes.pod.name"
+type = "VARCHAR"
+example = "filebeat-8bk29"
+description = "Nome do pod instanciado no cluster Kubernetes"
+
+[[infra.columns]]
+name = "kubernetes.pod.uid"
+type = "VARCHAR"
+example = "5af418df-acaa-4901-806b-2a74a062a625"
+description = "Identificador único universal (UID) do pod no Kubernetes"
+
+[[infra.columns]]
+name = "log.file.path"
+type = "VARCHAR"
+example = "/var/log/containers/filebeat-8bk29_dpipot_filebeat-191d188d40c7d9a5f06"
+description = "Caminho absoluto do arquivo de log no nó do cluster"
+
+[[infra.columns]]
+name = "log.level"
+type = "VARCHAR"
+example = "info"
+description = "Nível de severidade do log (ex: info, error, warning, debug)"
+
+[[infra.columns]]
+name = "log.logger"
+type = "VARCHAR"
+example = "input.harvester"
+description = "Campo de registro de log (log.logger)"
+
+[[infra.columns]]
+name = "log.offset"
+type = "INTEGER"
+example = "10466993"
+description = "Posição em bytes (offset) no arquivo de log de origem"
+
+[[infra.columns]]
+name = "log.origin.file.line"
+type = "INTEGER"
+example = "334"
+description = "Campo de registro de log (log.origin.file.line)"
+
+[[infra.columns]]
+name = "log.origin.file.name"
+type = "VARCHAR"
+example = "log/harvester.go"
+description = "Campo de registro de log (log.origin.file.name)"
+
+[[infra.columns]]
+name = "log.origin.function"
+type = "VARCHAR"
+example = "github.com/elastic/beats/v7/filebeat/input/log.(*Harvester).Run"
+description = "Campo de registro de log (log.origin.function)"
+
+[[infra.columns]]
+name = "message"
+type = "VARCHAR"
+example = "File was removed. Closing because close_removed is enabled."
+description = "Mensagem descritiva de log do honeypot ou comando"
+
+[[infra.columns]]
+name = "os_id"
+type = "VARCHAR"
+example = "1714205-64512"
+description = "Campo de registro de log (os_id)"
+
+[[infra.columns]]
+name = "service.name"
+type = "VARCHAR"
+example = "filebeat"
+description = "Nome do serviço associado à emissão do log"
+
+[[infra.columns]]
+name = "source_file"
+type = "VARCHAR"
+example = "/var/log/containers/dpipot-proxy-6x848_dpipot_dpipot-73e3432bfe4ee222e"
+description = "Campo de registro de log (source_file)"
+
+[[infra.columns]]
+name = "state_id"
+type = "VARCHAR"
+example = "native::1714205-64512"
+description = "Campo de registro de log (state_id)"
+
+[[infra.columns]]
+name = "stream"
+type = "VARCHAR"
+example = "stderr"
+description = "Canal de saída do container (stdout ou stderr)"
+
+[[infra.columns]]
+name = "kubernetes.labels.pod-template-hash"
+type = "VARCHAR"
+example = "5b959669d5"
+description = "Metadado do Kubernetes para labels.pod-template-hash"
+
+[[infra.columns]]
+name = "kubernetes.replicaset.name"
+type = "VARCHAR"
+example = "kafka-5b959669d5"
+description = "Metadado do Kubernetes para replicaset.name"
+
+[[infra.columns]]
+name = "monitoring.ecs.version"
+type = "VARCHAR"
+example = "1.6.0"
+description = "Campo de registro de log (monitoring.ecs.version)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.cgroup.cpu.stats.periods"
+type = "INTEGER"
+example = "189"
+description = "Métrica interna de monitoramento (beat.cgroup.cpu.stats.periods)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.cgroup.cpu.stats.throttled.ns"
+type = "INTEGER"
+example = "12791977"
+description = "Métrica interna de monitoramento (beat.cgroup.cpu.stats.throttled.ns)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.cgroup.cpu.stats.throttled.periods"
+type = "INTEGER"
+example = "93"
+description = "Métrica interna de monitoramento (beat.cgroup.cpu.stats.throttled.periods)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.cgroup.memory.mem.usage.bytes"
+type = "INTEGER"
+example = "288833536"
+description = "Métrica interna de monitoramento (beat.cgroup.memory.mem.usage.bytes)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.cpu.system.ticks"
+type = "INTEGER"
+example = "11177810"
+description = "Métrica interna de monitoramento (beat.cpu.system.ticks)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.cpu.system.time.ms"
+type = "INTEGER"
+example = "650"
+description = "Métrica interna de monitoramento (beat.cpu.system.time.ms)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.cpu.total.ticks"
+type = "INTEGER"
+example = "93344530"
+description = "Métrica interna de monitoramento (beat.cpu.total.ticks)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.cpu.total.time.ms"
+type = "INTEGER"
+example = "5930"
+description = "Métrica interna de monitoramento (beat.cpu.total.time.ms)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.cpu.total.value"
+type = "INTEGER"
+example = "93344530"
+description = "Métrica interna de monitoramento (beat.cpu.total.value)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.cpu.user.ticks"
+type = "INTEGER"
+example = "82166720"
+description = "Métrica interna de monitoramento (beat.cpu.user.ticks)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.cpu.user.time.ms"
+type = "INTEGER"
+example = "5280"
+description = "Métrica interna de monitoramento (beat.cpu.user.time.ms)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.handles.limit.hard"
+type = "INTEGER"
+example = "65536"
+description = "Métrica interna de monitoramento (beat.handles.limit.hard)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.handles.limit.soft"
+type = "INTEGER"
+example = "65536"
+description = "Métrica interna de monitoramento (beat.handles.limit.soft)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.handles.open"
+type = "INTEGER"
+example = "20"
+description = "Métrica interna de monitoramento (beat.handles.open)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.info.ephemeral_id"
+type = "VARCHAR"
+example = "30fb9782-2d37-4237-aa2e-2bdb2757ec6b"
+description = "Métrica interna de monitoramento (beat.info.ephemeral_id)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.info.uptime.ms"
+type = "INTEGER"
+example = "1365728098"
+description = "Métrica interna de monitoramento (beat.info.uptime.ms)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.info.version"
+type = "VARCHAR"
+example = "8.12.0"
+description = "Métrica interna de monitoramento (beat.info.version)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.memstats.gc_next"
+type = "INTEGER"
+example = "133610120"
+description = "Métrica interna de monitoramento (beat.memstats.gc_next)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.memstats.memory_alloc"
+type = "INTEGER"
+example = "86642624"
+description = "Métrica interna de monitoramento (beat.memstats.memory_alloc)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.memstats.memory_total"
+type = "INTEGER"
+example = "4228381535560"
+description = "Métrica interna de monitoramento (beat.memstats.memory_total)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.memstats.rss"
+type = "INTEGER"
+example = "252817408"
+description = "Métrica interna de monitoramento (beat.memstats.rss)"
+
+[[infra.columns]]
+name = "monitoring.metrics.beat.runtime.goroutines"
+type = "INTEGER"
+example = "196"
+description = "Métrica interna de monitoramento (beat.runtime.goroutines)"
+
+[[infra.columns]]
+name = "monitoring.metrics.filebeat.events.active"
+type = "INTEGER"
+example = "3203"
+description = "Métrica interna de monitoramento (filebeat.events.active)"
+
+[[infra.columns]]
+name = "monitoring.metrics.filebeat.events.added"
+type = "INTEGER"
+example = "9803"
+description = "Métrica interna de monitoramento (filebeat.events.added)"
+
+[[infra.columns]]
+name = "monitoring.metrics.filebeat.events.done"
+type = "INTEGER"
+example = "11205"
+description = "Métrica interna de monitoramento (filebeat.events.done)"
+
+[[infra.columns]]
+name = "monitoring.metrics.filebeat.harvester.closed"
+type = "INTEGER"
+example = "1"
+description = "Métrica interna de monitoramento (filebeat.harvester.closed)"
+
+[[infra.columns]]
+name = "monitoring.metrics.filebeat.harvester.open_files"
+type = "INTEGER"
+example = "9"
+description = "Métrica interna de monitoramento (filebeat.harvester.open_files)"
+
+[[infra.columns]]
+name = "monitoring.metrics.filebeat.harvester.running"
+type = "INTEGER"
+example = "9"
+description = "Métrica interna de monitoramento (filebeat.harvester.running)"
+
+[[infra.columns]]
+name = "monitoring.metrics.filebeat.harvester.started"
+type = "INTEGER"
+example = "3"
+description = "Métrica interna de monitoramento (filebeat.harvester.started)"
+
+[[infra.columns]]
+name = "monitoring.metrics.filebeat.input.log.files.truncated"
+type = "INTEGER"
+example = "1"
+description = "Métrica interna de monitoramento (filebeat.input.log.files.truncated)"
+
+[[infra.columns]]
+name = "monitoring.metrics.libbeat.config.module.running"
+type = "INTEGER"
+example = "13"
+description = "Métrica interna de monitoramento (libbeat.config.module.running)"
+
+[[infra.columns]]
+name = "monitoring.metrics.libbeat.config.module.starts"
+type = "INTEGER"
+example = "1"
+description = "Métrica interna de monitoramento (libbeat.config.module.starts)"
+
+[[infra.columns]]
+name = "monitoring.metrics.libbeat.config.module.stops"
+type = "INTEGER"
+example = "1"
+description = "Métrica interna de monitoramento (libbeat.config.module.stops)"
+
+[[infra.columns]]
+name = "monitoring.metrics.libbeat.output.events.acked"
+type = "INTEGER"
+example = "9600"
+description = "Métrica interna de monitoramento (libbeat.output.events.acked)"
+
+[[infra.columns]]
+name = "monitoring.metrics.libbeat.output.events.active"
+type = "INTEGER"
+example = "3200"
+description = "Métrica interna de monitoramento (libbeat.output.events.active)"
+
+[[infra.columns]]
+name = "monitoring.metrics.libbeat.output.events.batches"
+type = "INTEGER"
+example = "7"
+description = "Métrica interna de monitoramento (libbeat.output.events.batches)"
+
+[[infra.columns]]
+name = "monitoring.metrics.libbeat.output.events.total"
+type = "INTEGER"
+example = "11200"
+description = "Métrica interna de monitoramento (libbeat.output.events.total)"
+
+[[infra.columns]]
+name = "monitoring.metrics.libbeat.output.read.bytes"
+type = "INTEGER"
+example = "48"
+description = "Métrica interna de monitoramento (libbeat.output.read.bytes)"
+
+[[infra.columns]]
+name = "monitoring.metrics.libbeat.output.write.bytes"
+type = "INTEGER"
+example = "1850863"
+description = "Métrica interna de monitoramento (libbeat.output.write.bytes)"
+
+[[infra.columns]]
+name = "monitoring.metrics.libbeat.pipeline.clients"
+type = "INTEGER"
+example = "13"
+description = "Métrica interna de monitoramento (libbeat.pipeline.clients)"
+
+[[infra.columns]]
+name = "monitoring.metrics.libbeat.pipeline.events.active"
+type = "INTEGER"
+example = "3201"
+description = "Métrica interna de monitoramento (libbeat.pipeline.events.active)"
+
+[[infra.columns]]
+name = "monitoring.metrics.libbeat.pipeline.events.filtered"
+type = "INTEGER"
+example = "5"
+description = "Métrica interna de monitoramento (libbeat.pipeline.events.filtered)"
+
+[[infra.columns]]
+name = "monitoring.metrics.libbeat.pipeline.events.published"
+type = "INTEGER"
+example = "10057"
+description = "Métrica interna de monitoramento (libbeat.pipeline.events.published)"
+
+[[infra.columns]]
+name = "monitoring.metrics.libbeat.pipeline.events.total"
+type = "INTEGER"
+example = "10062"
+description = "Métrica interna de monitoramento (libbeat.pipeline.events.total)"
+
+[[infra.columns]]
+name = "monitoring.metrics.libbeat.pipeline.queue.acked"
+type = "INTEGER"
+example = "9600"
+description = "Métrica interna de monitoramento (libbeat.pipeline.queue.acked)"
+
+[[infra.columns]]
+name = "monitoring.metrics.registrar.states.cleanup"
+type = "INTEGER"
+example = "1"
+description = "Métrica interna de monitoramento (registrar.states.cleanup)"
+
+[[infra.columns]]
+name = "monitoring.metrics.registrar.states.current"
+type = "INTEGER"
+example = "136"
+description = "Métrica interna de monitoramento (registrar.states.current)"
+
+[[infra.columns]]
+name = "monitoring.metrics.registrar.states.update"
+type = "INTEGER"
+example = "9605"
+description = "Métrica interna de monitoramento (registrar.states.update)"
+
+[[infra.columns]]
+name = "monitoring.metrics.registrar.writes.success"
+type = "INTEGER"
+example = "7"
+description = "Métrica interna de monitoramento (registrar.writes.success)"
+
+[[infra.columns]]
+name = "monitoring.metrics.registrar.writes.total"
+type = "INTEGER"
+example = "6"
+description = "Métrica interna de monitoramento (registrar.writes.total)"
+
+[[infra.columns]]
+name = "monitoring.metrics.system.load.1"
+type = "DOUBLE"
+example = "10.53"
+description = "Métrica interna de monitoramento (system.load.1)"
+
+[[infra.columns]]
+name = "monitoring.metrics.system.load.15"
+type = "DOUBLE"
+example = "7.57"
+description = "Métrica interna de monitoramento (system.load.15)"
+
+[[infra.columns]]
+name = "monitoring.metrics.system.load.5"
+type = "DOUBLE"
+example = "8.55"
+description = "Métrica interna de monitoramento (system.load.5)"
+
+[[infra.columns]]
+name = "monitoring.metrics.system.load.norm.1"
+type = "DOUBLE"
+example = "0.8775"
+description = "Métrica interna de monitoramento (system.load.norm.1)"
+
+[[infra.columns]]
+name = "monitoring.metrics.system.load.norm.15"
+type = "DOUBLE"
+example = "0.6308"
+description = "Métrica interna de monitoramento (system.load.norm.15)"
+
+[[infra.columns]]
+name = "monitoring.metrics.system.load.norm.5"
+type = "DOUBLE"
+example = "0.7125"
+description = "Métrica interna de monitoramento (system.load.norm.5)"
+
+[[infra.columns]]
+name = "old_finished"
+type = "BOOLEAN"
+example = "True"
+description = "Campo de registro de log (old_finished)"
+
+[[infra.columns]]
+name = "old_os_id"
+type = "VARCHAR"
+example = "1727031-64512"
+description = "Campo de registro de log (old_os_id)"
+
+[[infra.columns]]
+name = "old_source"
+type = "VARCHAR"
+example = "/var/log/containers/galah-deployment-55b78f7c6-5h7hm_dpipot_galah-1915"
+description = "Campo de registro de log (old_source)"
+
+[pods]
+name = "pods"
+label = "Pods & Honeypots (Cowrie/Heralding)"
+description = "Logs de interação direta dos invasores com os honeypots de alta interatividade (SSH, Telnet, RDP)."
+total_columns = 117
+
+[[pods.columns]]
+name = "@timestamp"
+type = "TIMESTAMP"
+example = "2026-07-27 10:00:30.339000-03:00"
+description = "Data e hora do evento no padrão ISO-8601 (UTC)"
+
+[[pods.columns]]
+name = "_id"
+type = "VARCHAR"
+example = "ruapo58B2VwnjNfatw0P"
+description = "Identificador único do documento indexado"
+
+[[pods.columns]]
+name = "container.id"
+type = "VARCHAR"
+example = "6c9bbcf99858de0edecd6a1c1198b96a3b2c1f9f180400fa284e19364ee68535"
+description = "ID hexadecimal do container Docker/containerd no Kubernetes"
+
+[[pods.columns]]
+name = "container.image.name"
+type = "VARCHAR"
+example = "busybox:stable"
+description = "Nome da imagem de container utilizada (ex: filebeat, cowrie, proxy)"
+
+[[pods.columns]]
+name = "container.runtime"
+type = "VARCHAR"
+example = "containerd"
+description = "Runtime de containers em execução (ex: containerd)"
+
+[[pods.columns]]
+name = "dst_ip"
+type = "VARCHAR"
+example = "10.1.99.28"
+description = "Endereço IP de destino do pacote ou fluxo"
+
+[[pods.columns]]
+name = "dst_port"
+type = "INTEGER"
+example = "2222"
+description = "Porta de rede de destino (ex: 22, 80, 443, 30000)"
+
+[[pods.columns]]
+name = "event.original"
+type = "VARCHAR"
+example = "New connection: 200.137.89.86:41294 (10.1.99.28:2222) [session: dd8ee1"
+description = "Conteúdo bruto original da mensagem de log antes da formatação"
+
+[[pods.columns]]
+name = "eventid"
+type = "VARCHAR"
+example = "cowrie.session.connect"
+description = "Código de identificador de evento do honeypot (ex: cowrie.login.failed, cowrie.session.connect)"
+
+[[pods.columns]]
+name = "host.name"
+type = "VARCHAR"
+example = "filebeat-8bk29"
+description = "Nome do host onde o agente de coleta está rodando"
+
+[[pods.columns]]
+name = "kubernetes.container.name"
+type = "VARCHAR"
+example = "cowrie-logs"
+description = "Nome do container definido no manifesto Kubernetes"
+
+[[pods.columns]]
+name = "kubernetes.labels.app"
+type = "VARCHAR"
+example = "cowrie"
+description = "Label app do Kubernetes associada à carga de trabalho"
+
+[[pods.columns]]
+name = "kubernetes.labels.pod-template-hash"
+type = "VARCHAR"
+example = "ddf9976d4"
+description = "Metadado do Kubernetes para labels.pod-template-hash"
+
+[[pods.columns]]
+name = "kubernetes.namespace"
+type = "VARCHAR"
+example = "dpipot"
+description = "Namespace do Kubernetes onde o pod está alocado (ex: dpipot)"
+
+[[pods.columns]]
+name = "kubernetes.namespace_labels.app_kubernetes_io/name"
+type = "VARCHAR"
+example = "dpipot"
+description = "Metadado do Kubernetes para namespace_labels.app_kubernetes_io/name"
+
+[[pods.columns]]
+name = "kubernetes.namespace_labels.kubernetes_io/metadata_name"
+type = "VARCHAR"
+example = "dpipot"
+description = "Metadado do Kubernetes para namespace_labels.kubernetes_io/metadata_name"
+
+[[pods.columns]]
+name = "kubernetes.namespace_uid"
+type = "VARCHAR"
+example = "98492dbe-0a56-4852-8872-a2e424389eb4"
+description = "Metadado do Kubernetes para namespace_uid"
+
+[[pods.columns]]
+name = "kubernetes.node.hostname"
+type = "VARCHAR"
+example = "dpipot"
+description = "Hostname do nó do cluster Kubernetes"
+
+[[pods.columns]]
+name = "kubernetes.node.labels.beta_kubernetes_io/arch"
+type = "VARCHAR"
+example = "amd64"
+description = "Metadado do Kubernetes para node.labels.beta_kubernetes_io/arch"
+
+[[pods.columns]]
+name = "kubernetes.node.labels.beta_kubernetes_io/os"
+type = "VARCHAR"
+example = "linux"
+description = "Metadado do Kubernetes para node.labels.beta_kubernetes_io/os"
+
+[[pods.columns]]
+name = "kubernetes.node.labels.kubernetes_io/arch"
+type = "VARCHAR"
+example = "amd64"
+description = "Metadado do Kubernetes para node.labels.kubernetes_io/arch"
+
+[[pods.columns]]
+name = "kubernetes.node.labels.kubernetes_io/hostname"
+type = "VARCHAR"
+example = "dpipot"
+description = "Metadado do Kubernetes para node.labels.kubernetes_io/hostname"
+
+[[pods.columns]]
+name = "kubernetes.node.labels.kubernetes_io/os"
+type = "VARCHAR"
+example = "linux"
+description = "Metadado do Kubernetes para node.labels.kubernetes_io/os"
+
+[[pods.columns]]
+name = "kubernetes.node.labels.microk8s_io/cluster"
+type = "BOOLEAN"
+example = "True"
+description = "Metadado do Kubernetes para node.labels.microk8s_io/cluster"
+
+[[pods.columns]]
+name = "kubernetes.node.labels.node_kubernetes_io/microk8s-controlplane"
+type = "VARCHAR"
+example = "microk8s-controlplane"
+description = "Metadado do Kubernetes para node.labels.node_kubernetes_io/microk8s-controlplane"
+
+[[pods.columns]]
+name = "kubernetes.node.name"
+type = "VARCHAR"
+example = "dpipot"
+description = "Metadado do Kubernetes para node.name"
+
+[[pods.columns]]
+name = "kubernetes.node.uid"
+type = "VARCHAR"
+example = "368868ad-8420-4bda-a757-ef07cc1062e8"
+description = "Metadado do Kubernetes para node.uid"
+
+[[pods.columns]]
+name = "kubernetes.pod.ip"
+type = "VARCHAR"
+example = "10.1.99.28"
+description = "Endereço IP interno atribuído ao pod pelo CNI do Kubernetes"
+
+[[pods.columns]]
+name = "kubernetes.pod.name"
+type = "VARCHAR"
+example = "cowrie-ddf9976d4-4lvd2"
+description = "Nome do pod instanciado no cluster Kubernetes"
+
+[[pods.columns]]
+name = "kubernetes.pod.uid"
+type = "VARCHAR"
+example = "c04e81d5-a75f-4184-b275-bae925a994d4"
+description = "Identificador único universal (UID) do pod no Kubernetes"
+
+[[pods.columns]]
+name = "kubernetes.replicaset.name"
+type = "VARCHAR"
+example = "cowrie-ddf9976d4"
+description = "Metadado do Kubernetes para replicaset.name"
+
+[[pods.columns]]
+name = "log.file.path"
+type = "VARCHAR"
+example = "/var/log/containers/cowrie-ddf9976d4-4lvd2_dpipot_cowrie-logs-6c9bbcf9"
+description = "Caminho absoluto do arquivo de log no nó do cluster"
+
+[[pods.columns]]
+name = "log.offset"
+type = "INTEGER"
+example = "7049110"
+description = "Posição em bytes (offset) no arquivo de log de origem"
+
+[[pods.columns]]
+name = "protocol"
+type = "VARCHAR"
+example = "ssh"
+description = "Protocolo da sessão do honeypot (ex: ssh, telnet, rdp, http)"
+
+[[pods.columns]]
+name = "sensor"
+type = "VARCHAR"
+example = "cowrie-ddf9976d4-4lvd2"
+description = "Nome do sensor ou pod honeypot que capturou a sessão"
+
+[[pods.columns]]
+name = "session"
+type = "VARCHAR"
+example = "dd8ee1e3cd58"
+description = "Identificador único da sessão de interação aberta pelo honeypot"
+
+[[pods.columns]]
+name = "src_ip"
+type = "VARCHAR"
+example = "200.137.89.86"
+description = "Endereço IP de origem do tráfego ou atacante"
+
+[[pods.columns]]
+name = "src_port"
+type = "INTEGER"
+example = "41294"
+description = "Porta efêmera ou de origem do tráfego"
+
+[[pods.columns]]
+name = "stream"
+type = "VARCHAR"
+example = "stdout"
+description = "Canal de saída do container (stdout ou stderr)"
+
+[[pods.columns]]
+name = "timestamp"
+type = "TIMESTAMP"
+example = "2026-07-27 10:00:30.116890-03:00"
+description = "Timestamp do evento emitido internamente pelo honeypot"
+
+[[pods.columns]]
+name = "uuid"
+type = "VARCHAR"
+example = "26508e4e-6eff-11f1-9488-c6c9e32495b7"
+description = "Identificador único do evento no honeypot"
+
+[[pods.columns]]
+name = "app_proto"
+type = "VARCHAR"
+example = "Unknown"
+description = "Campo de registro de log (app_proto)"
+
+[[pods.columns]]
+name = "auth_attempts"
+type = "VARCHAR"
+example = ""
+description = "Campo de registro de log (auth_attempts)"
+
+[[pods.columns]]
+name = "banner"
+type = "VARCHAR"
+example = ""
+description = "Campo de registro de log (banner)"
+
+[[pods.columns]]
+name = "bytes"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (bytes)"
+
+[[pods.columns]]
+name = "bytes_copied"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (bytes_copied)"
+
+[[pods.columns]]
+name = "caller"
+type = "VARCHAR"
+example = "proxy/handler.go:864"
+description = "Campo de registro de log (caller)"
+
+[[pods.columns]]
+name = "compCS"
+type = "VARCHAR"
+example = "[\"none\"]"
+description = "Lista de algoritmos de compressão aceitos pelo cliente"
+
+[[pods.columns]]
+name = "destination_ip"
+type = "VARCHAR"
+example = ""
+description = "Campo de registro de log (destination_ip)"
+
+[[pods.columns]]
+name = "destination_port"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (destination_port)"
+
+[[pods.columns]]
+name = "dst"
+type = "VARCHAR"
+example = "200.137.89.87:48630"
+description = "Campo de registro de log (dst)"
+
+[[pods.columns]]
+name = "duration"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (duration)"
+
+[[pods.columns]]
+name = "duration_ms"
+type = "DOUBLE"
+example = "17.0"
+description = "Duração total do fluxo de conexão em milissegundos"
+
+[[pods.columns]]
+name = "encCS"
+type = "VARCHAR"
+example = "[\"aes128-gcm@openssh.com\", \"aes256-gcm@openssh.com\", \"chacha20-poly130"
+description = "Lista de algoritmos de criptografia cliente-para-servidor suportados"
+
+[[pods.columns]]
+name = "error"
+type = "VARCHAR"
+example = "rdp: TLS handshake with client failed: tls: client offered only unsupp"
+description = "Campo de registro de log (error)"
+
+[[pods.columns]]
+name = "firstChunk"
+type = "VARCHAR"
+example = "\u0003\u0000\u0000+&�\u0000\u0000\u0000\u0000\u0000Cookie: m"
+description = "Campo de registro de log (firstChunk)"
+
+[[pods.columns]]
+name = "flow_id"
+type = "VARCHAR"
+example = "3dae9b93-383b-431a-b01b-dd97037f3f0a"
+description = "Identificador único universal (UUID) do fluxo de rede"
+
+[[pods.columns]]
+name = "greeting"
+type = "VARCHAR"
+example = ""
+description = "Campo de registro de log (greeting)"
+
+[[pods.columns]]
+name = "hassh"
+type = "VARCHAR"
+example = "0a07365cc01fa9fc82608ba4019af499"
+description = "Fingerprint HASSH calculado a partir dos parâmetros de negociação SSH do cliente"
+
+[[pods.columns]]
+name = "hasshAlgorithms"
+type = "VARCHAR"
+example = "curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh"
+description = "String de algoritmos negociados utilizada para calcular o HASSH"
+
+[[pods.columns]]
+name = "heralding.auth_attempts"
+type = "VARCHAR"
+example = ""
+description = "Propriedade de captura do honeypot Heralding (auth_attempts)"
+
+[[pods.columns]]
+name = "heralding.destination_ip"
+type = "VARCHAR"
+example = ""
+description = "Propriedade de captura do honeypot Heralding (destination_ip)"
+
+[[pods.columns]]
+name = "heralding.destination_port"
+type = "INTEGER"
+example = ""
+description = "Propriedade de captura do honeypot Heralding (destination_port)"
+
+[[pods.columns]]
+name = "heralding.duration"
+type = "INTEGER"
+example = ""
+description = "Propriedade de captura do honeypot Heralding (duration)"
+
+[[pods.columns]]
+name = "heralding.num_auth_attempts"
+type = "INTEGER"
+example = ""
+description = "Propriedade de captura do honeypot Heralding (num_auth_attempts)"
+
+[[pods.columns]]
+name = "heralding.protocol"
+type = "VARCHAR"
+example = ""
+description = "Propriedade de captura do honeypot Heralding (protocol)"
+
+[[pods.columns]]
+name = "heralding.session_ended"
+type = "BOOLEAN"
+example = ""
+description = "Propriedade de captura do honeypot Heralding (session_ended)"
+
+[[pods.columns]]
+name = "heralding.session_id"
+type = "VARCHAR"
+example = ""
+description = "Propriedade de captura do honeypot Heralding (session_id)"
+
+[[pods.columns]]
+name = "heralding.source_ip"
+type = "VARCHAR"
+example = ""
+description = "Propriedade de captura do honeypot Heralding (source_ip)"
+
+[[pods.columns]]
+name = "heralding.source_port"
+type = "INTEGER"
+example = ""
+description = "Propriedade de captura do honeypot Heralding (source_port)"
+
+[[pods.columns]]
+name = "heralding.timestamp"
+type = "TIMESTAMP"
+example = ""
+description = "Propriedade de captura do honeypot Heralding (timestamp)"
+
+[[pods.columns]]
+name = "honeypot"
+type = "VARCHAR"
+example = "heralding:3389"
+description = "Identificador do serviço de honeypot e porta de encaminhamento (ex: cowrie:2222, heralding:80)"
+
+[[pods.columns]]
+name = "isAllZeros"
+type = "BOOLEAN"
+example = "False"
+description = "Campo de registro de log (isAllZeros)"
+
+[[pods.columns]]
+name = "isProbe"
+type = "BOOLEAN"
+example = "False"
+description = "Campo de registro de log (isProbe)"
+
+[[pods.columns]]
+name = "isSSH"
+type = "BOOLEAN"
+example = "False"
+description = "Campo de registro de log (isSSH)"
+
+[[pods.columns]]
+name = "isTLS"
+type = "BOOLEAN"
+example = "False"
+description = "Campo de registro de log (isTLS)"
+
+[[pods.columns]]
+name = "kexAlgs"
+type = "VARCHAR"
+example = "[\"curve25519-sha256\", \"curve25519-sha256@libssh.org\", \"ecdh-sha2-nistp"
+description = "Lista de algoritmos de troca de chave (KEX) suportados pelo cliente SSH"
+
+[[pods.columns]]
+name = "keyAlgs"
+type = "VARCHAR"
+example = "[\"rsa-sha2-256-cert-v01@openssh.com\", \"rsa-sha2-512-cert-v01@openssh.c"
+description = "Lista de tipos de chaves públicas de servidor aceitas pelo cliente SSH"
+
+[[pods.columns]]
+name = "kubernetes.daemonset.name"
+type = "VARCHAR"
+example = "dpipot-proxy"
+description = "Nome do DaemonSet Kubernetes correspondente"
+
+[[pods.columns]]
+name = "kubernetes.labels.controller-revision-hash"
+type = "VARCHAR"
+example = "5fd85c5479"
+description = "Metadado do Kubernetes para labels.controller-revision-hash"
+
+[[pods.columns]]
+name = "kubernetes.labels.pod-template-generation"
+type = "INTEGER"
+example = "394"
+description = "Metadado do Kubernetes para labels.pod-template-generation"
+
+[[pods.columns]]
+name = "label"
+type = "VARCHAR"
+example = "RDP"
+description = "Campo de registro de log (label)"
+
+[[pods.columns]]
+name = "langCS"
+type = "VARCHAR"
+example = "[\"\"]"
+description = "Configuração de idiomas aceitos pelo cliente SSH"
+
+[[pods.columns]]
+name = "len"
+type = "INTEGER"
+example = "43"
+description = "Campo de registro de log (len)"
+
+[[pods.columns]]
+name = "level"
+type = "VARCHAR"
+example = "info"
+description = "Campo de registro de log (level)"
+
+[[pods.columns]]
+name = "localAddr"
+type = "VARCHAR"
+example = "200.137.89.87:48110"
+description = "Campo de registro de log (localAddr)"
+
+[[pods.columns]]
+name = "local_addr"
+type = "VARCHAR"
+example = "200.137.89.87:4863"
+description = "Campo de registro de log (local_addr)"
+
+[[pods.columns]]
+name = "macCS"
+type = "VARCHAR"
+example = "[\"hmac-sha2-256-etm@openssh.com\", \"hmac-sha2-512-etm@openssh.com\", \"hm"
+description = "Lista de algoritmos de integridade (MAC) aceitos pelo cliente SSH"
+
+[[pods.columns]]
+name = "master_proto"
+type = "VARCHAR"
+example = "UNKNOWN"
+description = "Campo de registro de log (master_proto)"
+
+[[pods.columns]]
+name = "message"
+type = "VARCHAR"
+example = "2026-07-27T13:00:30+0000 [cowrie.ssh.factory.CowrieSSHFactory] No modu"
+description = "Mensagem descritiva de log do honeypot ou comando"
+
+[[pods.columns]]
+name = "msg"
+type = "VARCHAR"
+example = "RDP detectado, usando handler dedicado"
+description = "Campo de registro de log (msg)"
+
+[[pods.columns]]
+name = "n"
+type = "INTEGER"
+example = "43"
+description = "Campo de registro de log (n)"
+
+[[pods.columns]]
+name = "ndpi_app"
+type = "VARCHAR"
+example = "RDP"
+description = "Aplicação ou serviço detectado pelo motor de inspeção nDPI"
+
+[[pods.columns]]
+name = "ndpi_proto"
+type = "VARCHAR"
+example = "RDP"
+description = "Protocolo da camada de aplicação identificado pelo nDPI (ex: SSH, TLS, HTTP, DNS)"
+
+[[pods.columns]]
+name = "num_auth_attempts"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (num_auth_attempts)"
+
+[[pods.columns]]
+name = "origDstIP"
+type = "VARCHAR"
+example = "200.137.89.87"
+description = "Campo de registro de log (origDstIP)"
+
+[[pods.columns]]
+name = "origDstPort"
+type = "INTEGER"
+example = "48110"
+description = "Campo de registro de log (origDstPort)"
+
+[[pods.columns]]
+name = "password"
+type = "VARCHAR"
+example = "ssh-probe-73BADCA7926907B45F0B26198B24A8BE94846CCB95DDB106"
+description = "Senha informada na tentativa de autenticação"
+
+[[pods.columns]]
+name = "payload_dst_bytes"
+type = "INTEGER"
+example = "0"
+description = "Dados da carga útil de rede (payload_dst_bytes)"
+
+[[pods.columns]]
+name = "payload_src_bytes"
+type = "INTEGER"
+example = "43"
+description = "Dados da carga útil de rede (payload_src_bytes)"
+
+[[pods.columns]]
+name = "port"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (port)"
+
+[[pods.columns]]
+name = "remote_addr"
+type = "VARCHAR"
+example = "193.34.212.238:43391"
+description = "Campo de registro de log (remote_addr)"
+
+[[pods.columns]]
+name = "session_ended"
+type = "BOOLEAN"
+example = ""
+description = "Campo de registro de log (session_ended)"
+
+[[pods.columns]]
+name = "session_id"
+type = "VARCHAR"
+example = ""
+description = "Campo de registro de log (session_id)"
+
+[[pods.columns]]
+name = "slots_max"
+type = "INTEGER"
+example = "10000"
+description = "Capacidade máxima de conexões simultâneas do proxy"
+
+[[pods.columns]]
+name = "slots_used"
+type = "INTEGER"
+example = "82"
+description = "Número atual de conexões simultâneas em uso no proxy"
+
+[[pods.columns]]
+name = "source_ip"
+type = "VARCHAR"
+example = ""
+description = "Campo de registro de log (source_ip)"
+
+[[pods.columns]]
+name = "source_port"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (source_port)"
+
+[[pods.columns]]
+name = "src"
+type = "VARCHAR"
+example = "193.34.212.238:35595"
+description = "Campo de registro de log (src)"
+
+[[pods.columns]]
+name = "stacktrace"
+type = "VARCHAR"
+example = ""
+description = "Campo de registro de log (stacktrace)"
+
+[[pods.columns]]
+name = "target"
+type = "VARCHAR"
+example = ""
+description = "Campo de registro de log (target)"
+
+[[pods.columns]]
+name = "tcp_window"
+type = "INTEGER"
+example = "64240"
+description = "Tamanho da janela de recepção TCP anunciada (TCP Window Size)"
+
+[[pods.columns]]
+name = "ttl"
+type = "INTEGER"
+example = "111"
+description = "Time to Live (TTL) do pacote IP recebido"
+
+[[pods.columns]]
+name = "tuple_id"
+type = "VARCHAR"
+example = "193.34.212.238:35595-200.137.89.87:48630-6"
+description = "5-tupla do fluxo de rede (IP_origem:porta-IP_destino:porta-proto)"
+
+[[pods.columns]]
+name = "username"
+type = "VARCHAR"
+example = "root"
+description = "Nome de usuário informado na tentativa de autenticação"
+
+[[pods.columns]]
+name = "version"
+type = "VARCHAR"
+example = "SSH-2.0-Go"
+description = "Campo de registro de log (version)"
+
+[[pods.columns]]
+name = "zeros"
+type = "INTEGER"
+example = "12"
+description = "Campo de registro de log (zeros)"
+
+[proxy]
+name = "proxy"
+label = "Proxy MITM & Fluxos de Rede"
+description = "Logs de fluxos capturados pelo proxy transparente (TPROXY) com enriquecimento GeoIP/ASN e telemetria."
+total_columns = 89
+
+[[proxy.columns]]
+name = "@timestamp"
+type = "TIMESTAMP"
+example = "2026-07-27 01:25:27.616000-03:00"
+description = "Data e hora do evento no padrão ISO-8601 (UTC)"
+
+[[proxy.columns]]
+name = "@version"
+type = "INTEGER"
+example = "1"
+description = "Versão do esquema de eventos (Logstash/Filebeat/ECS)"
+
+[[proxy.columns]]
+name = "_id"
+type = "VARCHAR"
+example = "dpipot.events-application|0|6550721"
+description = "Identificador único do documento indexado"
+
+[[proxy.columns]]
+name = "dst_asn.asn"
+type = "INTEGER"
+example = "1916"
+description = "Número do Sistema Autônomo (ASN) de destino"
+
+[[proxy.columns]]
+name = "dst_asn.ip"
+type = "VARCHAR"
+example = "200.137.89.87"
+description = "Endereço IP consultado para o ASN de destino"
+
+[[proxy.columns]]
+name = "dst_asn.network"
+type = "VARCHAR"
+example = "200.137.0.0/16"
+description = "Bloco CIDR de rede correspondente ao ASN de destino"
+
+[[proxy.columns]]
+name = "dst_asn.organization_name"
+type = "VARCHAR"
+example = "Rede Nacional de Ensino e Pesquisa"
+description = "Nome da organização proprietária do ASN de destino"
+
+[[proxy.columns]]
+name = "dst_geo.city_name"
+type = "VARCHAR"
+example = "Itapemirim"
+description = "Nome da cidade do IP de destino"
+
+[[proxy.columns]]
+name = "dst_geo.continent_name"
+type = "VARCHAR"
+example = "South America"
+description = "Continente geográfico do IP de destino"
+
+[[proxy.columns]]
+name = "dst_geo.country_iso_code"
+type = "VARCHAR"
+example = "BR"
+description = "Código ISO de 2 letras do país de destino (ex: BR)"
+
+[[proxy.columns]]
+name = "dst_geo.country_name"
+type = "VARCHAR"
+example = "Brazil"
+description = "Nome do país de destino (ex: Brazil)"
+
+[[proxy.columns]]
+name = "dst_geo.location.lat"
+type = "DOUBLE"
+example = "-20.9847"
+description = "Latitude geográfica aproximada de destino"
+
+[[proxy.columns]]
+name = "dst_geo.location.lon"
+type = "DOUBLE"
+example = "-40.9675"
+description = "Longitude geográfica aproximada de destino"
+
+[[proxy.columns]]
+name = "dst_geo.region_iso_code"
+type = "VARCHAR"
+example = "BR-ES"
+description = "Código ISO da região ou estado de destino (ex: BR-ES)"
+
+[[proxy.columns]]
+name = "dst_geo.region_name"
+type = "VARCHAR"
+example = "Espírito Santo"
+description = "Nome do estado ou subdivisão regional de destino"
+
+[[proxy.columns]]
+name = "dst_ip"
+type = "VARCHAR"
+example = "200.137.89.87"
+description = "Endereço IP de destino do pacote ou fluxo"
+
+[[proxy.columns]]
+name = "dst_port"
+type = "INTEGER"
+example = "5560"
+description = "Porta de rede de destino (ex: 22, 80, 443, 30000)"
+
+[[proxy.columns]]
+name = "duration_ms"
+type = "DOUBLE"
+example = "683.945299"
+description = "Duração total do fluxo de conexão em milissegundos"
+
+[[proxy.columns]]
+name = "event.original"
+type = "VARCHAR"
+example = "{\"flow_id\":\"c4abb3dc-e0f4-4728-8c96-3cf52bf9005c\",\"tuple_id\":\"193.34.2"
+description = "Conteúdo bruto original da mensagem de log antes da formatação"
+
+[[proxy.columns]]
+name = "event_type"
+type = "VARCHAR"
+example = "flow"
+description = "Tipo semântico do evento (ex: flow, session, auth, command)"
+
+[[proxy.columns]]
+name = "flow_id"
+type = "VARCHAR"
+example = "c4abb3dc-e0f4-4728-8c96-3cf52bf9005c"
+description = "Identificador único universal (UUID) do fluxo de rede"
+
+[[proxy.columns]]
+name = "honeypot"
+type = "VARCHAR"
+example = "heralding:80"
+description = "Identificador do serviço de honeypot e porta de encaminhamento (ex: cowrie:2222, heralding:80)"
+
+[[proxy.columns]]
+name = "instance"
+type = "VARCHAR"
+example = "proxy"
+description = "Instância do componente DPIpot emissor (ex: classifier, proxy)"
+
+[[proxy.columns]]
+name = "ip_version"
+type = "INTEGER"
+example = "4"
+description = "Versão do protocolo de internet (4 para IPv4, 6 para IPv6)"
+
+[[proxy.columns]]
+name = "ndpi_app"
+type = "VARCHAR"
+example = "Unknown"
+description = "Aplicação ou serviço detectado pelo motor de inspeção nDPI"
+
+[[proxy.columns]]
+name = "ndpi_proto"
+type = "VARCHAR"
+example = "Unknown"
+description = "Protocolo da camada de aplicação identificado pelo nDPI (ex: SSH, TLS, HTTP, DNS)"
+
+[[proxy.columns]]
+name = "node_name"
+type = "VARCHAR"
+example = "dpipot"
+description = "Nome do nó físico ou VM do cluster Kubernetes (ex: dpipot)"
+
+[[proxy.columns]]
+name = "payload_dst_b64"
+type = "VARCHAR"
+example = "PCFET0NUWVBFIEhUTUw+CjxodG1sIGxhbmc9ImVuIj4KICAgIDxoZWFkPgogICAgICAgID"
+description = "Payload respondido pelo honeypot codificado em Base64"
+
+[[proxy.columns]]
+name = "payload_dst_hex"
+type = "VARCHAR"
+example = "3c21444f43545950452048544d4c3e0a3c68746d6c206c616e673d22656e223e0a2020"
+description = "Payload respondido pelo honeypot em formato hexadecimal"
+
+[[proxy.columns]]
+name = "payload_dst_text"
+type = "VARCHAR"
+example = "<!DOCTYPE HTML> <html lang=\"en\">     <head>         <meta charset=\"utf"
+description = "Payload respondido pelo honeypot decodificado em texto UTF-8"
+
+[[proxy.columns]]
+name = "payload_len"
+type = "INTEGER"
+example = "452"
+description = "Tamanho da carga útil (payload) em bytes"
+
+[[proxy.columns]]
+name = "payload_src_b64"
+type = "VARCHAR"
+example = "AwAAKybgAAAAAABDb29raWU6IG1zdHNoYXNoPWhlbGxvDQoBAAgAAwAAAA=="
+description = "Payload recebido do atacante codificado em Base64"
+
+[[proxy.columns]]
+name = "payload_src_hex"
+type = "VARCHAR"
+example = "0300002b26e00000000000436f6f6b69653a206d737473686173683d68656c6c6f0d0a"
+description = "Payload recebido do atacante em formato hexadecimal"
+
+[[proxy.columns]]
+name = "payload_src_text"
+type = "VARCHAR"
+example = "\u0003\u0000\u0000+&￠\u0000\u0000\u0000\u0000\u0000Cookie: mstshash=hello  \u0001\u0000\u0008\u0000\u0003\u0000\u0000\u0000"
+description = "Payload recebido do atacante decodificado em texto legível"
+
+[[proxy.columns]]
+name = "per_ip_active"
+type = "INTEGER"
+example = "81"
+description = "Quantidade de conexões simultâneas ativas originadas daquele IP"
+
+[[proxy.columns]]
+name = "pod_name"
+type = "VARCHAR"
+example = "dpipot-proxy-6x848"
+description = "Nome do pod Kubernetes que processou a conexão"
+
+[[proxy.columns]]
+name = "slots_max"
+type = "INTEGER"
+example = "10000"
+description = "Capacidade máxima de conexões simultâneas do proxy"
+
+[[proxy.columns]]
+name = "slots_used"
+type = "INTEGER"
+example = "94"
+description = "Número atual de conexões simultâneas em uso no proxy"
+
+[[proxy.columns]]
+name = "src_asn.asn"
+type = "INTEGER"
+example = "201814"
+description = "Número do Sistema Autônomo (ASN) de origem do atacante"
+
+[[proxy.columns]]
+name = "src_asn.ip"
+type = "VARCHAR"
+example = "193.34.212.238"
+description = "Endereço IP de origem consultado na base ASN"
+
+[[proxy.columns]]
+name = "src_asn.network"
+type = "VARCHAR"
+example = "193.34.212.0/23"
+description = "Bloco CIDR de rede de origem do atacante"
+
+[[proxy.columns]]
+name = "src_asn.organization_name"
+type = "VARCHAR"
+example = "MEVSPACE sp. z o.o."
+description = "Nome da empresa, ISP ou datacenter do atacante"
+
+[[proxy.columns]]
+name = "src_geo.continent_name"
+type = "VARCHAR"
+example = "Europe"
+description = "Continente de origem do atacante"
+
+[[proxy.columns]]
+name = "src_geo.country_iso_code"
+type = "VARCHAR"
+example = "PL"
+description = "Código ISO de duas letras do país do atacante"
+
+[[proxy.columns]]
+name = "src_geo.country_name"
+type = "VARCHAR"
+example = "Poland"
+description = "País de origem do atacante"
+
+[[proxy.columns]]
+name = "src_geo.location.lat"
+type = "DOUBLE"
+example = "52.2394"
+description = "Latitude geográfica aproximada da origem"
+
+[[proxy.columns]]
+name = "src_geo.location.lon"
+type = "DOUBLE"
+example = "21.0362"
+description = "Longitude geográfica aproximada da origem"
+
+[[proxy.columns]]
+name = "src_ip"
+type = "VARCHAR"
+example = "193.34.212.238"
+description = "Endereço IP de origem do tráfego ou atacante"
+
+[[proxy.columns]]
+name = "src_port"
+type = "INTEGER"
+example = "11659"
+description = "Porta efêmera ou de origem do tráfego"
+
+[[proxy.columns]]
+name = "tags"
+type = "VARCHAR"
+example = "[\"ndpi_unknown\"]"
+description = "Tags contextuais aplicadas pelo pipeline de ingestão"
+
+[[proxy.columns]]
+name = "tcp_window"
+type = "INTEGER"
+example = "64240"
+description = "Tamanho da janela de recepção TCP anunciada (TCP Window Size)"
+
+[[proxy.columns]]
+name = "tos"
+type = "INTEGER"
+example = "0"
+description = "Campo Type of Service (ToS) / DSCP do cabeçalho IP"
+
+[[proxy.columns]]
+name = "ttl"
+type = "INTEGER"
+example = "64"
+description = "Time to Live (TTL) do pacote IP recebido"
+
+[[proxy.columns]]
+name = "tuple_id"
+type = "VARCHAR"
+example = "193.34.212.238:11659-200.137.89.87:5560-6"
+description = "5-tupla do fluxo de rede (IP_origem:porta-IP_destino:porta-proto)"
+
+[[proxy.columns]]
+name = "afpacket_chan_drops"
+type = "INTEGER"
+example = ""
+description = "Quedas de pacotes na fila de canal do driver AF_PACKET"
+
+[[proxy.columns]]
+name = "afpacket_drops"
+type = "INTEGER"
+example = ""
+description = "Total de pacotes descartados pelo socket AF_PACKET"
+
+[[proxy.columns]]
+name = "attack_type"
+type = "VARCHAR"
+example = "524642203030332e3030330a"
+description = "Classificação específica do tipo de ataque ou varredura"
+
+[[proxy.columns]]
+name = "expected_proto"
+type = "VARCHAR"
+example = "RDP"
+description = "Protocolo esperado na porta segundo a configuração"
+
+[[proxy.columns]]
+name = "flow_table_not_found"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (flow_table_not_found)"
+
+[[proxy.columns]]
+name = "flow_table_size"
+type = "INTEGER"
+example = ""
+description = "Número atual de entradas ativas na tabela de fluxos"
+
+[[proxy.columns]]
+name = "flow_table_unknown"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (flow_table_unknown)"
+
+[[proxy.columns]]
+name = "flows_client_total"
+type = "INTEGER"
+example = ""
+description = "Contador acumulado de fluxos iniciados por clientes"
+
+[[proxy.columns]]
+name = "flows_honeypot_total"
+type = "INTEGER"
+example = ""
+description = "Contador acumulado de fluxos repassados a honeypots"
+
+[[proxy.columns]]
+name = "flowtracker_not_found"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (flowtracker_not_found)"
+
+[[proxy.columns]]
+name = "flowtracker_timeouts"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (flowtracker_timeouts)"
+
+[[proxy.columns]]
+name = "flowtracker_unknown"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (flowtracker_unknown)"
+
+[[proxy.columns]]
+name = "honeypot_error"
+type = "VARCHAR"
+example = "server-first relay failed: serverfirst: EOF"
+description = "Campo de registro de log (honeypot_error)"
+
+[[proxy.columns]]
+name = "kafka_chan_len"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (kafka_chan_len)"
+
+[[proxy.columns]]
+name = "kafka_delivery_dropped"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (kafka_delivery_dropped)"
+
+[[proxy.columns]]
+name = "kafka_delivery_errors"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (kafka_delivery_errors)"
+
+[[proxy.columns]]
+name = "kafka_drops"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (kafka_drops)"
+
+[[proxy.columns]]
+name = "kafka_marshal_errors"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (kafka_marshal_errors)"
+
+[[proxy.columns]]
+name = "kafka_produce_errors"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (kafka_produce_errors)"
+
+[[proxy.columns]]
+name = "kafka_queue_len"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (kafka_queue_len)"
+
+[[proxy.columns]]
+name = "kafka_status"
+type = "VARCHAR"
+example = ""
+description = "Campo de registro de log (kafka_status)"
+
+[[proxy.columns]]
+name = "ndpi_cleanup_evicted"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (ndpi_cleanup_evicted)"
+
+[[proxy.columns]]
+name = "ndpi_flows_active"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (ndpi_flows_active)"
+
+[[proxy.columns]]
+name = "ndpi_packets_processed"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (ndpi_packets_processed)"
+
+[[proxy.columns]]
+name = "payload_size"
+type = "INTEGER"
+example = "0"
+description = "Dados da carga útil de rede (payload_size)"
+
+[[proxy.columns]]
+name = "port_mismatch"
+type = "BOOLEAN"
+example = "True"
+description = "Campo de registro de log (port_mismatch)"
+
+[[proxy.columns]]
+name = "rtt_ms"
+type = "DOUBLE"
+example = "211.632"
+description = "Tempo de ida e volta estimado (Round-Trip Time) em milissegundos"
+
+[[proxy.columns]]
+name = "rtt_var_ms"
+type = "DOUBLE"
+example = "79.376"
+description = "Campo de registro de log (rtt_var_ms)"
+
+[[proxy.columns]]
+name = "src_geo.city_name"
+type = "VARCHAR"
+example = "Campo Bom"
+description = "Cidade de origem geográfica do atacante"
+
+[[proxy.columns]]
+name = "src_geo.region_iso_code"
+type = "VARCHAR"
+example = "BR-RS"
+description = "Código da região/estado de origem do atacante"
+
+[[proxy.columns]]
+name = "src_geo.region_name"
+type = "VARCHAR"
+example = "Rio Grande do Sul"
+description = "Nome do estado ou região da origem do atacante"
+
+[[proxy.columns]]
+name = "tcp_retransmits_client_total"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (tcp_retransmits_client_total)"
+
+[[proxy.columns]]
+name = "tcp_retransmits_honeypot_total"
+type = "INTEGER"
+example = ""
+description = "Campo de registro de log (tcp_retransmits_honeypot_total)"
+
+[[proxy.columns]]
+name = "tracker_found"
+type = "BOOLEAN"
+example = "True"
+description = "Campo de registro de log (tracker_found)"
+
+[[proxy.columns]]
+name = "uptime_sec"
+type = "DOUBLE"
+example = ""
+description = "Tempo de atividade contínua (uptime) do serviço em segundos"
