@@ -85,6 +85,11 @@ class DpipotAnalyticsApp(App):
     }
 
     /* Aba 1: Conversor */
+    #sel_filter_type {
+        width: 26;
+        margin-right: 1;
+    }
+
     #convert_left {
         width: 65%;
         border-right: solid $primary;
@@ -152,6 +157,29 @@ class DpipotAnalyticsApp(App):
         padding: 1;
     }
 
+    .dict-type-bar {
+        height: auto;
+        margin-bottom: 1;
+    }
+
+    .dict-type-bar Button {
+        margin-right: 1;
+    }
+
+    .dict-filter-bar {
+        height: auto;
+        margin-bottom: 1;
+    }
+
+    #inp_filter_dict {
+        width: 1fr;
+        margin-right: 1;
+    }
+
+    #btn_reload_toml {
+        width: 22;
+    }
+
     #table_dict {
         height: 1fr;
         border: solid $primary;
@@ -180,6 +208,9 @@ class DpipotAnalyticsApp(App):
         self.current_loaded_parquets: List[Path] = []
         self.current_start_date: str = ""
         self.current_end_date: str = ""
+
+        # Estado do dicionário TOML
+        self.current_dict_type: str = "classifier"
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -268,14 +299,15 @@ class DpipotAnalyticsApp(App):
             # -------------------------------------------------------------
             with TabPane("📋 Dicionário de Colunas (Config TOML)", id="tab_pane_dict"):
                 with Vertical(id="dict_main"):
-                    with Horizontal(classes="action-bar"):
-                        yield Label("Tipo de Log:")
-                        yield Select(
-                            [(t.upper(), t) for t in DPIPOT_TYPES],
-                            id="sel_dict_type",
-                            value="classifier"
-                        )
-                        yield Input(placeholder="🔍 Filtrar coluna ou descrição...", id="inp_filter_dict")
+                    yield Label("Selecione o Tipo de Log do DPIpot:", classes="section-title")
+                    with Horizontal(classes="dict-type-bar"):
+                        yield Button("🏷️ Classifier", id="btn_dict_classifier", variant="primary")
+                        yield Button("📦 Infra", id="btn_dict_infra", variant="default")
+                        yield Button("🍯 Pods", id="btn_dict_pods", variant="default")
+                        yield Button("🌐 Proxy", id="btn_dict_proxy", variant="default")
+
+                    with Horizontal(classes="dict-filter-bar"):
+                        yield Input(placeholder="🔍 Filtrar nome da coluna ou descrição...", id="inp_filter_dict")
                         yield Button("🔄 Recarregar TOML", variant="default", id="btn_reload_toml")
 
                     yield Label("", id="lbl_dict_header", classes="section-subtitle")
@@ -594,15 +626,39 @@ class DpipotAnalyticsApp(App):
         except Exception as err:
             self.notify(f"Erro ao ler dpipot_types.toml: {err}", severity="error")
 
+    def _set_dict_active_type(self, log_type: str) -> None:
+        self.current_dict_type = log_type
+        for t in DPIPOT_TYPES:
+            try:
+                b = self.query_one(f"#btn_dict_{t}", Button)
+                b.variant = "primary" if t == log_type else "default"
+            except Exception:
+                pass
+        self._refresh_dict_view()
+
     def _refresh_dict_view(self) -> None:
         tbl = self.query_one("#table_dict", DataTable)
         tbl.clear()
 
-        sel_type = self.query_one("#sel_dict_type", Select).value
-        log_type = str(sel_type) if sel_type != Select.BLANK else "classifier"
-
+        log_type = self.current_dict_type
         type_cfg = self.schema_config.get(log_type, {})
         columns = type_cfg.get("columns", [])
+
+        # Atualizar contagens nos botões de tipo
+        for t in DPIPOT_TYPES:
+            try:
+                b = self.query_one(f"#btn_dict_{t}", Button)
+                t_cols = len(self.schema_config.get(t, {}).get("columns", []))
+                labels = {
+                    "classifier": f"🏷️ Classifier ({t_cols})",
+                    "infra": f"📦 Infra ({t_cols})",
+                    "pods": f"🍯 Pods ({t_cols})",
+                    "proxy": f"🌐 Proxy ({t_cols})",
+                }
+                b.label = labels.get(t, t.upper())
+                b.variant = "primary" if t == log_type else "default"
+            except Exception:
+                pass
 
         # Filtro de busca de colunas
         filter_text = self.query_one("#inp_filter_dict", Input).value.strip().lower()
@@ -673,6 +729,9 @@ class DpipotAnalyticsApp(App):
             self._handle_context_query_3()
 
         # Aba 3: Dicionário
+        elif btn_id in ("btn_dict_classifier", "btn_dict_infra", "btn_dict_pods", "btn_dict_proxy"):
+            new_type = btn_id.replace("btn_dict_", "")
+            self._set_dict_active_type(new_type)
         elif btn_id == "btn_reload_toml":
             self._load_toml_schema()
             self._refresh_dict_view()
@@ -759,8 +818,6 @@ class DpipotAnalyticsApp(App):
             self._reload_logs_list()
         elif event.select.id == "sel_query_type" and event.value != Select.BLANK:
             self._load_active_period()
-        elif event.select.id == "sel_dict_type" and event.value != Select.BLANK:
-            self._refresh_dict_view()
 
     def on_input_changed(self, event: Input.Changed) -> None:
         if event.input.id == "inp_filter_dict":

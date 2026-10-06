@@ -1,4 +1,4 @@
-# dpipot-analytics(1) — TUI Log Processor & DuckDB Query Engine para DPIpot-NG
+# dpipot-analytics(1) — Specialized DPIpot Log Ingestion & Analytics Engine
 
 ```
        ___       _             _                             _       _   _
@@ -8,102 +8,196 @@
                   |_|                                     |__/
 ```
 
-> Analisador especializado para os logs do **DPIpot-NG**: processamento de CSVs completos por dia em Parquet (Zstandard), consultas analíticas DuckDB com filtro por intervalo de datas e dicionário de metadados configurável via TOML.
+> Out-of-core columnar transformation and temporal query engine for DPIpot-NG telemetry.
 
 ---
 
-## 🚀 VISÃO GERAL & REQUISITOS ATENDIDOS
-
-O `dpipot-analytics` é dedicado e otimizado exclusivamente para a análise dos quatro tipos de logs gerados pela arquitetura DPIpot:
-
-1. **`classifier`**: Logs de classificação profunda de tráfego de rede na borda (nDPI / DPIpot Classifier).
-2. **`infra`**: Logs operacionais de infraestrutura Kubernetes, agentes Filebeat e telemetria de nós.
-3. **`pods`**: Logs de sessões e interações diretas de invasores com os honeypots (Cowrie SSH/Telnet, Heralding, etc.).
-4. **`proxy`**: Logs de fluxos de rede capturados pelo proxy transparente (TPROXY) com enriquecimento GeoIP/ASN e telemetria.
-
-### Principais Funcionalidades:
-
-* **Ingestão Específica por Dia**: Varre a pasta `logs/` identificando os arquivos no formato `dpipot-<tipo>-<data>.csv` e converte para a pasta `data/` preservando 100% das colunas em formato colunar Apache Parquet com o mesmo nome e extensão `.parquet` (ex: `dpipot-classifier-2026.07.27.parquet`).
-* **Consultas por Intervalo de Datas**: Permite filtrar o período de análise (ex: `2026-07-01` a `2026-07-31`). O motor DuckDB carrega dinamicamente a união dos arquivos Parquet correspondentes ao período selecionado para execução de consultas ANSI SQL de alta performance em milissegundos.
-* **Esquema Configurável em TOML (`dpipot_types.toml`)**: Cada um dos 4 tipos possui uma seção no arquivo com o nome de cada coluna, tipo SQL, exemplo real e descrição semântica. O arquivo pode ser editado pelo usuário.
-* **Dicionário Interativo na TUI**: Aba dedicada exibindo todas as colunas de cada tipo de arquivo, com pesquisa/filtro em tempo real e botão de recarga instantânea (`Recarregar TOML`).
-* **CLI Headless**: Utilitário de linha de comando (`scripts/dpipot_cli.py`) para automações em scripts e pipelines.
-
----
-
-## 💻 EXECUÇÃO
+## SYNOPSIS
 
 ```bash
-# Iniciar a Interface TUI Especializada
+# Terminal User Interface (interactive)
 python tui.py
-# ou
 python scripts/tui.py
 
-# Utilizar a CLI (Headless)
+# Headless command-line interface
 python scripts/dpipot_cli.py list
-python scripts/dpipot_cli.py schema --type proxy --filter "geo"
-python scripts/dpipot_cli.py query --type infra --start 2026-07-27 --end 2026-07-28 --sql "SELECT \"log.level\", COUNT(*) FROM logs GROUP BY 1"
+python scripts/dpipot_cli.py query --type proxy --start 2026-07-27 --end 2026-07-28 --sql "SELECT * FROM logs LIMIT 20;"
+python scripts/dpipot_cli.py schema --type classifier --filter "ndpi"
+python scripts/dpipot_cli.py convert --type infra --date 2026-07-27
+
+# One-liner ad-hoc query via DuckDB
+python -c "import duckdb; duckdb.sql('SELECT COUNT(*) FROM read_parquet(\"data/dpipot-infra-2026.07.27.parquet\")').show()"
 ```
 
 ---
 
-## ⌨️ ATALHOS DE TECLADO NA TUI
+## DESCRIPTION
 
-| Atalho | Contexto | Ação |
-| :--- | :--- | :--- |
-| `F1` | Global | Alternar para a Aba 1: **Ingestão de Logs (CSV ➔ Parquet)** |
-| `F2` | Global | Alternar para a Aba 2: **Consultas por Intervalo de Datas** |
-| `F3` | Global | Alternar para a Aba 3: **Dicionário de Colunas (Config TOML)** |
-| `Ctrl + R` | Global | Recarregar lista de arquivos e esquemas TOML |
-| `Ctrl + Q` | Global | Sair da aplicação |
-| `Tab` / `Shift + Tab` | Global | Alternar foco entre componentes |
+`dpipot-analytics` is a domain-specific, terminal-native telemetry engine designed for processing and querying high-volume honeypot logs from the **DPIpot-NG** architecture deployed on academic backbones.
 
----
+The system replaces generic CSV handlers with a zero-copy, out-of-core columnar pipeline driven by **DuckDB** and **Apache Parquet (Zstandard)**. It specifically targets the four canonical DPIpot telemetry profiles:
 
-## 📁 ESTRUTURA DOS ARQUIVOS E PASTAS
-
-* `logs/`: Diretório contendo os arquivos CSV brutos por dia:
-  * `dpipot-classifier-YYYY.MM.DD.csv`
-  * `dpipot-infra-YYYY.MM.DD.csv`
-  * `dpipot-pods-YYYY.MM.DD.csv`
-  * `dpipot-proxy-YYYY.MM.DD.csv`
-* `data/`: Diretório de destino dos arquivos Parquet completos gerados (com o mesmo nome base):
-  * `dpipot-classifier-YYYY.MM.DD.parquet`
-  * `dpipot-infra-YYYY.MM.DD.parquet`
-  * `dpipot-pods-YYYY.MM.DD.parquet`
-  * `dpipot-proxy-YYYY.MM.DD.parquet`
-* `dpipot_types.toml`: Arquivo de configuração e documentação das colunas de cada tipo (`classifier`, `infra`, `pods`, `proxy`).
+1. **`classifier`** — Edge nDPI deep packet inspection and network traffic classification.
+2. **`infra`** — Kubernetes cluster operations, Filebeat harvesters, and container runtime telemetry.
+3. **`pods`** — Interactive honeypot execution logs (Cowrie SSH/Telnet, Heralding, credentials, and shells).
+4. **`proxy`** — Transparent MITM (TPROXY) network flows enriched with MaxMind GeoIP, ASN metadata, and TCP stack metrics.
 
 ---
 
-## ⚙️ FORMATO DO ARQUIVO TOML (`dpipot_types.toml`)
+## CORE ARCHITECTURE
 
-O arquivo TOML permite personalização direta pelo usuário. Para cada tipo de log:
+```
++--------------------------------------------------------------------------+
+| RAW LOG INGESTION (logs/dpipot-<type>-<YYYY.MM.DD>.csv)                 |
+| Full-width raw CSV logs partitioned daily (~50-100 GB/day)              |
++--------------------------------------------------------------------------+
+                                     |
+                                     | [1] Streaming ZSTD Block Ingestion
+                                     v
++--------------------------------------------------------------------------+
+| VECTORIZED DUCKDB ENGINE                                                 |
+| - 100% column preservation (no discarded telemetry fields)              |
+| - Out-of-core disk spill execution below RAM limits                      |
+| - Automatic row group optimization (100k tuples/block)                   |
++--------------------------------------------------------------------------+
+                                     |
+                                     | [2] Columnar Parquet Serialization
+                                     v
++--------------------------------------------------------------------------+
+| STORAGE TIER (data/dpipot-<type>-<YYYY.MM.DD>.parquet)                   |
+| 1:1 filename equivalence (lossless ZSTD compression ~25x-60x)            |
++--------------------------------------------------------------------------+
+                                     |
+                                     | [3] Temporal Partition Union
+                                     v
++--------------------------------------------------------------------------+
+| TEMPORAL QUERY & ANALYTICS                                               |
+| - Date-range window evaluation (e.g. 2026-07-01 -> 2026-07-31)          |
+| - Dynamic unified view creation: read_parquet([...], union_by_name=true) |
+| - Sub-second ANSI SQL execution over multi-gigabyte partitions           |
++--------------------------------------------------------------------------+
+```
+
+---
+
+## LOG PROFILES
+
+The engine enforces strict profiling based on the DPIpot-NG logging pipeline:
+
+| Profile | Origin | Volume | Description |
+| :--- | :--- | :--- | :--- |
+| `classifier` | Network Edge (nDPI) | ~50 GB/day | Flow category IDs, L4/L7 protocol signatures, IP proto, TCP flags, packet lengths. |
+| `infra` | Kubernetes / Filebeat | ~20 MB/day | DaemonSet metrics, container IDs, node health, harvester states, log levels. |
+| `pods` | Cowrie / Heralding | ~90 GB/day | Session tokens, raw shell inputs (`CMD:`), authentication pairs, HASSH fingerprints. |
+| `proxy` | TPROXY / AF_PACKET | ~20 GB/day | Attacker IPs, GeoIP country/city, ASN ownership, RTT, TCP window, TTL, payloads. |
+
+---
+
+## TEMPORAL QUERY ENGINE
+
+Queries operate over immutable Parquet partitions bounded by temporal intervals. 
+
+When a date range is supplied (e.g., `2026-07-27` to `2026-07-28`), the engine resolves matching parquet files in `data/`, binds them into an in-memory unified view `logs` (and alias `dpipot`), and executes vectorized SQL:
+
+```sql
+-- Example: Top adversary origins across a multi-day window
+SELECT 
+    COALESCE("src_geo.country_name", 'Unknown') AS country,
+    "src_asn.organization_name" AS asn_org,
+    COUNT(*) AS total_flows
+FROM logs
+WHERE honeypot LIKE '%cowrie%'
+GROUP BY 1, 2
+ORDER BY 3 DESC
+LIMIT 20;
+```
+
+---
+
+## TOML SCHEMA SPECIFICATION (`dpipot_types.toml`)
+
+All column semantics, data types, and empirical examples are decoupled into `dpipot_types.toml`.
 
 ```toml
 [proxy]
 name = "proxy"
-label = "Proxy MITM & Fluxos de Rede"
-description = "Logs de fluxos capturados pelo proxy transparente (TPROXY) com enriquecimento GeoIP/ASN e telemetria."
+label = "Proxy MITM & Network Flows"
+description = "Transparent MITM proxy telemetry with GeoIP/ASN enrichment."
 total_columns = 89
 
 [[proxy.columns]]
 name = "src_ip"
 type = "VARCHAR"
 example = "193.34.212.238"
-description = "Endereço IP de origem do tráfego ou atacante"
-
-[[proxy.columns]]
-name = "src_geo.country_name"
-type = "VARCHAR"
-example = "Poland"
-description = "País de origem do atacante"
+description = "Adversary source IP address observed at the edge socket"
 
 [[proxy.columns]]
 name = "duration_ms"
 type = "DOUBLE"
 example = "683.945299"
-description = "Duração total do fluxo de conexão em milissegundos"
+description = "Total flow duration in milliseconds"
 ```
 
-A TUI recarrega essas alterações em tempo real na Aba 3 através do botão **Recarregar TOML**.
+The configuration is user-editable. The TUI dictionary viewer dynamically reloads changes without restarting via the `Reload TOML` trigger.
+
+---
+
+## KEYBINDINGS
+
+| Keybinding | Context | Action |
+| :--- | :--- | :--- |
+| `F1` | Global | Switch to Ingestion & Parquet tab |
+| `F2` | Global | Switch to Date-Range Query tab |
+| `F3` | Global | Switch to TOML Schema Dictionary tab |
+| `Ctrl + Enter` | SQL Editor | Execute SQL query |
+| `Ctrl + R` | Global | Refresh disk partitions and reload TOML schema |
+| `Ctrl + Q` | Global | Terminate application |
+| `Tab` / `Shift + Tab` | Global | Cycle focus between UI regions |
+| `Up` / `Down` | Table | Navigate records |
+
+---
+
+## CLI REFERENCE
+
+Headless operations are available through `scripts/dpipot_cli.py`:
+
+```bash
+# List local dataset status
+python scripts/dpipot_cli.py list
+
+# Convert a specific daily partition
+python scripts/dpipot_cli.py convert --type classifier --date 2026-07-27
+
+# Convert all pending daily logs
+python scripts/dpipot_cli.py convert --pending-only
+
+# Execute analytical query over date range
+python scripts/dpipot_cli.py query \
+    --type proxy \
+    --start 2026-07-27 \
+    --end 2026-07-28 \
+    --sql "SELECT dst_port, COUNT(*) FROM logs GROUP BY 1 ORDER BY 2 DESC LIMIT 10"
+
+# Inspect schema dictionary
+python scripts/dpipot_cli.py schema --type pods --filter "password"
+```
+
+---
+
+## DIRECTORY STRUCTURE
+
+```
+.
+|-- tui.py                      # TUI bootstrap entrypoint
+|-- dpipot_types.toml           # Authoritative TOML schema dictionary
+|-- requirements.txt            # System dependencies
+|-- logs/                       # Daily raw CSV logs (dpipot-<type>-<date>.csv)
+|-- data/                       # Columnar Parquet partitions (dpipot-<type>-<date>.parquet)
+|-- docs/                       # Research documentation and figures
+`-- scripts/
+    |-- dpipot_core.py          # Vectorized ingestion, date-range partitioner, TOML parser
+    |-- dpipot_cli.py           # Headless command-line utility
+    |-- tui.py                  # Textual asynchronous terminal interface
+    |-- extrair_ssh_parquet.py  # Specialized SSH extraction routine
+    `-- analisar_resultados.py  # Plotting pipelines for academic reporting
+```
